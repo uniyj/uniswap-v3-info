@@ -6,6 +6,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear'
 import gql from 'graphql-tag'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { useActiveNetworkVersion, useClients } from 'state/application/hooks'
+import { arbitrumClient, optimismClient } from 'apollo/client'
 
 // format dayjs with the libraries that we need
 dayjs.extend(utc)
@@ -44,7 +45,7 @@ async function fetchChartData(client: ApolloClient<NormalizedCacheObject>) {
     volumeUSD: string
     tvlUSD: string
   }[] = []
-  const startTimestamp = 1619170975
+  const startTimestamp = client === arbitrumClient ? 1630423606 : 1619170975
   const endTimestamp = dayjs.utc().unix()
 
   let error = false
@@ -106,12 +107,19 @@ async function fetchChartData(client: ApolloClient<NormalizedCacheObject>) {
       timestamp = nextDay
     }
 
-    const dateMap = Object.keys(formattedExisting).map((key) => {
-      return formattedExisting[parseInt(key)]
-    })
+    if (client === optimismClient) {
+      formattedExisting[18855] = {
+        ...formattedExisting[18855],
+        tvlUSD: 13480000,
+      }
+      formattedExisting[18856] = {
+        ...formattedExisting[18856],
+        tvlUSD: 13480000,
+      }
+    }
 
     return {
-      data: dateMap,
+      data: Object.values(formattedExisting),
       error: false,
     }
   } else {
